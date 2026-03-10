@@ -24,9 +24,16 @@ MIN_CONFIDENCE = 0.4        # Minimum confidence for alignment segments
 MIN_CAPTION_DURATION_MS = 100  # Minimum duration per caption
 MAX_GAP_WARNING_MS = 500    # Warn if gap between captions exceeds this
 
-# Word-level alignment settings
-ALIGNMENT_GRANULARITY = "word"   # "word" or "sentence"
+# Performance optimization settings
+MODEL_CACHE_DIR = ".model_cache"  # Local model cache directory
+MAX_AUDIO_LENGTH_SEC = 600   # Maximum audio length for processing (10 minutes)
+TEMP_FILE_PREFIX = "caption_tool_"  # Prefix for temp files
+CONCURRENT_BATCH_SIZE = 4    # Number of files to process concurrently in batch mode
+
+# Word-level alignment settings - OPTIMIZED FOR TUNISIAN ARABIC
+ALIGNMENT_GRANULARITY = "word"   # "word" or "sentence" - word recommended
 MAX_TOKENS_PER_CAPTION = 3       # Maximum grouped tokens per caption block
+DEFAULT_WORD_LEVEL = True        # Enable word-level by default for optimal granularity
 
 # Arabic particles that drive grouping logic in srt_writer.group_words()
 ARABIC_PARTICLES = {

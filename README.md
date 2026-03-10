@@ -29,14 +29,17 @@ pip install ctc-forced-aligner torch torchaudio
 
 ### 2. Basic Usage
 ```bash
-# Single file processing
+# Single file processing (uses word-level by default for optimal results)
 python3 align.py --audio input/video.mp3 --script input/script.txt
 
 # Batch processing (auto-matches filenames)
 python3 align.py --batch --input-dir input/ --output-dir output/
 
-# Word-level alignment for precise timing
-python3 align.py --audio input/video.wav --script input/script.txt --word-level
+# Force sentence-level alignment (if needed)
+python3 align.py --audio input/video.wav --script input/script.txt --sentence-level
+
+# Quality analysis of results
+python3 quality_analyzer.py output/video.srt
 ```
 
 ### 3. Test Installation
@@ -93,11 +96,17 @@ python3 align.py --audio input/video.m4a --script input/script.txt --offset -200
 
 ### Quality Options
 ```bash
-# Word-level alignment (more precise for fast speech)
-python3 align.py --audio input/video.wav --script input/script.txt --word-level
+# Default word-level alignment (optimal for Tunisian Arabic)
+python3 align.py --audio input/video.wav --script input/script.txt
+
+# Force sentence-level alignment (for very long captions)
+python3 align.py --audio input/video.wav --script input/script.txt --sentence-level
 
 # Custom caption length limit
 python3 align.py --audio input/video.mp3 --script input/script.txt --max-chars 30
+
+# Quality analysis with improvement suggestions
+python3 quality_analyzer.py output/video.srt
 
 # Verbose output for debugging
 python3 align.py --audio input/video.wav --script input/script.txt --verbose

@@ -105,7 +105,14 @@ Examples:
     parser.add_argument(
         "--word-level",
         action="store_true",
-        help="Use word-level alignment instead of sentence-level"
+        default=True,  # Default to word-level for optimal Tunisian Arabic results
+        help="Use word-level alignment (default: True, optimal for mixed Arabic/French)"
+    )
+    
+    parser.add_argument(
+        "--sentence-level",
+        action="store_true",
+        help="Force sentence-level alignment (overrides default word-level)"
     )
     
     # Batch mode arguments
@@ -204,9 +211,11 @@ def process_single_file(args: argparse.Namespace) -> None:
         
         print(f"📋 Found {len(sentences)} sentences for alignment")
         
-        # Step 4: Perform alignment
-        if args.word_level:
-            print("🤖 Performing word-level forced alignment...")
+        # Step 4: Perform alignment (default to word-level for optimal results)
+        use_word_level = args.word_level and not args.sentence_level
+        
+        if use_word_level:
+            print("🤖 Performing word-level forced alignment (optimal for Tunisian Arabic)...")
             segments = align_word_level(temp_wav_path, sentences, args.language, args.max_chars)
         else:
             print("🤖 Performing sentence-level forced alignment...")

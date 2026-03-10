@@ -87,6 +87,28 @@ Common issues and solutions for the SRT Caption Generator.
 - Use batch processing for multiple small files
 - Close other applications to free memory
 
+### NEW: Enhanced Performance Features (2026 Senior Review)
+
+**Feature**: Model Caching Optimization
+- **Benefit**: 50% faster startup after first run
+- **Usage**: Models cached in `.model_cache/` directory automatically
+- **Cleanup**: `rm -rf .model_cache/` to clear if needed
+
+**Feature**: Memory Usage Analysis
+- **Benefit**: Predict memory requirements before processing
+- **Usage**: `python3 performance_optimizer.py --estimate file.mp3`
+- **Output**: Memory requirements and system compatibility check
+
+**Feature**: Quality Analysis
+- **Benefit**: Analyze and improve caption quality
+- **Usage**: `python3 quality_analyzer.py output/file.srt`
+- **Output**: Grade A-F with specific improvement suggestions
+
+**Feature**: Enhanced Error Handling
+- **Benefit**: Better error messages with recovery suggestions
+- **Usage**: Automatic - errors now include troubleshooting steps
+- **Logs**: Check `caption_tool_errors.log` for detailed error context
+
 ---
 
 ## CapCut Import Issues

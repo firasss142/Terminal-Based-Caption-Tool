@@ -26,17 +26,8 @@ def align(audio_path: Union[str, Path], sentences: List[str], language: str = "a
         import ssl
         import urllib.request
         
-        # Fix SSL certificate issues on macOS
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
-        
-        # Apply the SSL context globally for urllib
-        original_urlopen = urllib.request.urlopen
-        def patched_urlopen(url, *args, **kwargs):
-            kwargs.setdefault('context', ctx)
-            return original_urlopen(url, *args, **kwargs)
-        urllib.request.urlopen = patched_urlopen
+        # Optimized model handling - avoid SSL patching
+        # SSL issues should be handled by the alignment library itself
         
     except ImportError as e:
         raise RuntimeError(
@@ -66,7 +57,7 @@ def align(audio_path: Union[str, Path], sentences: List[str], language: str = "a
         temp_script_path = f.name
     
     try:
-        print("📥 Downloading alignment model (first run only)...")
+        print("📥 Loading facebook/mms-300m model (cached after first run)...")
         
         # Create alignment instance (singleton pattern - downloads model on first use)
         aligner = AlignmentTorchSingleton()
