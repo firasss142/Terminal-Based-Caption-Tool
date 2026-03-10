@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/bin/python -c \":*)",
+      "Bash(.venv/bin/python test_word_level.py)",
+      "Read(//Users/firaskarchoud/ctc_forced_aligner/**)",
+      "Bash(.venv/bin/python -c \"import onnxruntime; print\\(onnxruntime.__version__\\)\")",
+      "Bash(.venv/bin/python -c \"import platform; print\\(platform.python_version\\(\\)\\)\")",
+      "Bash(xxd ~/ctc_forced_aligner/model.onnx)",
+      "Bash(kill 54613)",
+      "Read(//Users/firaskarchoud/Documents/RT Caption Generator for CapCut/caption-tool/**)",
+      "Bash(wget --version)",
+      "Read(//Users/firaskarchoud/.cache/torch/hub/**)",
+      "Read(//Users/firaskarchoud/.cache/torch/hub/checkpoints/**)",
+      "Bash(.venv/bin/pip install unidecode -q)",
+      "Bash(python3 -m pip install unidecode -q)",
+      "Bash(python3 -c \"from unidecode import unidecode; print\\(''installed ok''\\)\")",
+      "Bash(.venv/bin/python align.py --audio input/biovera-vo-1.MP3.MP3 --script input/second.txt --word-level --output output/biovera-vo-1.srt)",
+      "Bash(.venv/bin/python diff_check.py)",
+      "Bash(.venv/bin/python3 -c \":*)"
+    ],
+    "additionalDirectories": [
+      "/Users/firaskarchoud/.claude/projects/-Users-firaskarchoud-Documents-RT-Caption-Generator-for-CapCut-caption-tool"
+    ]
+  }
+}
