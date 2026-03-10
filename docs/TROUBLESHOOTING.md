@@ -139,6 +139,6 @@ Common issues and solutions for the SRT Caption Generator.
 **Cause**: Various system or file issues
 **Fix**: 
 1. Delete any temporary files in /tmp/
-2. Clear model cache: `rm -rf ~/.cache/huggingface/`
+2. Clear PyTorch model cache: `rm -rf ~/.cache/torch/hub/checkpoints/`
 3. Restart alignment process
 4. Use `--verbose` flag to diagnose issues

@@ -68,15 +68,18 @@ Your project is complete with all required files:
 ```
 caption-tool/
 ├── align.py              ✅ Main CLI entrypoint
-├── normalize.py          ✅ Audio normalization  
-├── aligner.py            ✅ Forced alignment core
-├── srt_writer.py         ✅ SRT formatting
+├── aligner.py            ✅ Forced alignment core (sentence + word-level)
+├── srt_writer.py         ✅ SRT formatting + group_words() + timing logic
+├── normalize.py          ✅ Audio normalization (ffmpeg → 16kHz mono WAV)
 ├── validator.py          ✅ Input validation
-├── batch.py              ✅ Batch processing
-├── config.py             ✅ Constants and defaults
-├── demo_align.py         ✅ Demo mode (works now)
-├── test_basic.py         ✅ Basic functionality tests
-├── input/                ✅ Test files ready
+├── batch.py              ✅ Batch processing (sentence-level)
+├── config.py             ✅ Constants + ARABIC_PARTICLES
+├── diff_check.py         ✅ Quality checker vs reference SRT
+├── test_word_level.py    ✅ Quick word-level alignment test
+├── download_model.py     ✅ Resume-capable ONNX model downloader
+├── demo_align.py         ✅ Demo mode with synthetic data
+├── test_basic.py         ✅ Basic module functionality tests
+├── input/                ✅ Drop audio + txt files here
 ├── output/               ✅ Generated SRT files
 └── docs/                 ✅ Complete documentation
 ```

@@ -17,7 +17,8 @@
       "Bash(python3 -c \"from unidecode import unidecode; print\\(''installed ok''\\)\")",
       "Bash(.venv/bin/python align.py --audio input/biovera-vo-1.MP3.MP3 --script input/second.txt --word-level --output output/biovera-vo-1.srt)",
       "Bash(.venv/bin/python diff_check.py)",
-      "Bash(.venv/bin/python3 -c \":*)"
+      "Bash(.venv/bin/python3 -c \":*)",
+      "Bash(grep -E \"\\\\.py$\")"
     ],
     "additionalDirectories": [
       "/Users/firaskarchoud/.claude/projects/-Users-firaskarchoud-Documents-RT-Caption-Generator-for-CapCut-caption-tool"

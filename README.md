@@ -51,19 +51,28 @@ python3 test_basic.py
 ```
 caption-tool/
 ├── align.py              ← Main CLI entrypoint
-├── normalize.py          ← Audio normalization 
-├── aligner.py            ← Forced alignment core
-├── srt_writer.py         ← SRT formatting + output
-├── validator.py          ← Input validation
-├── batch.py              ← Batch processing
-├── config.py             ← Constants and defaults
+├── aligner.py            ← Forced alignment core (sentence + word-level)
+├── srt_writer.py         ← SRT formatting, group_words(), timing logic
+├── normalize.py          ← Audio → 16kHz mono WAV via ffmpeg
+├── validator.py          ← Input validation (file existence, WPM check)
+├── batch.py              ← Batch processing (sentence-level)
+├── config.py             ← All constants (ARABIC_PARTICLES, timings, etc.)
+├── diff_check.py         ← Quality checker: compare output vs reference SRT
+├── test_word_level.py    ← Quick alignment test on first N sentences
+├── download_model.py     ← Resume-capable downloader for ONNX model
+├── demo_align.py         ← Demo mode with synthetic data
+├── test_basic.py         ← Basic module functionality tests
 ├── input/                ← Drop audio + txt files here
 ├── output/               ← SRT files generated here
 └── docs/                 ← Detailed documentation
     ├── CLI.md
     ├── ALIGNER.md
-    ├── TROUBLESHOOTING.md
-    └── ...
+    ├── SRT_WRITER.md
+    ├── CONFIG.md
+    ├── BATCH.md
+    ├── NORMALIZE.md
+    ├── VALIDATOR.md
+    └── TROUBLESHOOTING.md
 ```
 
 ---

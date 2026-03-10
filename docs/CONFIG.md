@@ -1,5 +1,5 @@
 # CONFIG
-> Last updated: 2026-03-09
+> Last updated: 2026-03-10
 
 ## Purpose
 Defines all shared constants and default values used across the SRT Caption Generator modules. These values are carefully tuned for CapCut compatibility and Tunisian Arabic dialect processing.
@@ -25,6 +25,19 @@ Defines all shared constants and default values used across the SRT Caption Gene
 | MIN_CONFIDENCE | float | 0.4 | Minimum alignment confidence threshold |
 | MIN_CAPTION_DURATION_MS | int | 100 | Minimum duration for any caption |
 | MAX_GAP_WARNING_MS | int | 500 | Gap threshold that triggers warning |
+| ALIGNMENT_GRANULARITY | str | "word" | Default granularity: "word" or "sentence" |
+| MAX_TOKENS_PER_CAPTION | int | 3 | Maximum grouped tokens per caption block |
+| ARABIC_PARTICLES | set | (see below) | Arabic function words that drive grouping logic in `group_words()` |
+
+### ARABIC_PARTICLES
+```python
+ARABIC_PARTICLES = {
+    "في", "من", "و", "ولا", "كان", "على", "مع", "باش",
+    "هو", "هي", "اللي", "لي", "تحت", "فوق", "ال", "لا",
+    "ما", "وما", "كيما", "لين", "وقتلي", "واللي",
+}
+```
+Used by `srt_writer.group_words()` to decide whether a third token in a potential 3-token block is a content word or another particle.
 
 ## Returns
 N/A - This module only exports constants.
@@ -34,7 +47,7 @@ No error handling - constants only.
 
 ## Usage Example
 ```python
-from config import SAMPLE_RATE, SRT_LINE_ENDING, MAX_CHARS_PER_LINE
+from config import SAMPLE_RATE, SRT_LINE_ENDING, MAX_CHARS_PER_LINE, ARABIC_PARTICLES
 ```
 
 ## Known Edge Cases
