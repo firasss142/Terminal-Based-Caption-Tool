@@ -186,22 +186,29 @@ def _merge_short_blocks(segments: List[Dict], threshold_ms: int = 50) -> List[Di
 
 
 def _enforce_timing(segments: List[Dict]) -> List[Dict]:
-    """Enforce MIN_CAPTION_DURATION_MS and prevent overlaps.
+    """Enforce MIN_CAPTION_DURATION_MS and eliminate gaps between captions.
 
-    Captions may be back-to-back (0ms gap) to allow short function words to
-    reach the 100ms minimum.  Overlap (end > next_start) is never allowed.
+    Each caption's end time matches the next caption's start time exactly.
+    Overlap (end > next_start) is never allowed.
     """
     if not segments:
         return segments
     result = [dict(s) for s in segments]
     for i, seg in enumerate(result):
-        # Extend to minimum duration
-        if seg["end_ms"] - seg["start_ms"] < MIN_CAPTION_DURATION_MS:
-            seg["end_ms"] = seg["start_ms"] + MIN_CAPTION_DURATION_MS
-        # Hard-clamp at next_start (allow 0-gap back-to-back, but no overlap)
         if i + 1 < len(result):
-            if seg["end_ms"] > result[i + 1]["start_ms"]:
-                seg["end_ms"] = max(seg["start_ms"] + 1, result[i + 1]["start_ms"])
+            next_start = result[i + 1]["start_ms"]
+            # Ensure minimum duration while eliminating gaps
+            min_end = seg["start_ms"] + MIN_CAPTION_DURATION_MS
+            if min_end <= next_start:
+                # Set end time to match next start time exactly (no gap)
+                seg["end_ms"] = next_start
+            else:
+                # If minimum duration would overlap next caption, clamp to 1ms before
+                seg["end_ms"] = max(seg["start_ms"] + 1, next_start)
+        else:
+            # Last segment: just enforce minimum duration
+            if seg["end_ms"] - seg["start_ms"] < MIN_CAPTION_DURATION_MS:
+                seg["end_ms"] = seg["start_ms"] + MIN_CAPTION_DURATION_MS
     return result
 
 

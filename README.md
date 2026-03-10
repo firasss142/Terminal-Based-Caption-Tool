@@ -148,7 +148,7 @@ python3 align.py --batch --input-dir input/ --output-dir output/
 
 ## Quality Features
 
-- **Smart Gap Correction**: Automatically fixes overlapping captions
+- **Gap Elimination**: Eliminates gaps between captions for seamless playback
 - **Character Limits**: Auto-split long captions at word boundaries  
 - **Word-Level Mode**: More precise timing for fast-speaking segments
 - **Confidence Warnings**: Alerts for low-quality alignments

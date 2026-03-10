@@ -101,7 +101,7 @@ Post-grouping: calls `_enforce_timing()` then `_merge_short_blocks()`.
 def _enforce_timing(segments: List[Dict]) -> List[Dict]:
 ```
 
-Enforces `MIN_CAPTION_DURATION_MS` (100 ms) on every caption.  Captions may be back-to-back (0 ms gap) to let short function words reach minimum duration.  Overlaps (end > next_start) are hard-clamped.
+Enforces `MIN_CAPTION_DURATION_MS` (100 ms) on every caption and eliminates gaps between consecutive captions. Each caption's end time exactly matches the next caption's start time, creating seamless subtitle transitions. Overlaps (end > next_start) are prevented by clamping when minimum duration requirements would cause conflicts.
 
 ---
 
