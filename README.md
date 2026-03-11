@@ -1,3 +1,13 @@
+---
+title: SRT Caption Generator
+emoji: 🎬
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # SRT Caption Generator for CapCut
 ## Tunisian Arabic Forced Alignment Tool
 

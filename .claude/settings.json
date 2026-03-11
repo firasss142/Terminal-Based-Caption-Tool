@@ -18,7 +18,13 @@
       "Bash(.venv/bin/python align.py --audio input/biovera-vo-1.MP3.MP3 --script input/second.txt --word-level --output output/biovera-vo-1.srt)",
       "Bash(.venv/bin/python diff_check.py)",
       "Bash(.venv/bin/python3 -c \":*)",
-      "Bash(grep -E \"\\\\.py$\")"
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(python3 -c \"import fastapi; print\\(''fastapi ok''\\)\")",
+      "Bash(.venv/bin/pip install fastapi \"uvicorn[standard]\" aiofiles python-multipart)",
+      "Bash(ls .venv/bin/python*)",
+      "Bash(python3 -m pip install fastapi \"uvicorn[standard]\" aiofiles python-multipart)",
+      "Bash(chmod +x \"/Users/firaskarchoud/Documents/RT Caption Generator for CapCut/caption-tool/start_web.sh\")",
+      "Bash(python3 -c \":*)"
     ],
     "additionalDirectories": [
       "/Users/firaskarchoud/.claude/projects/-Users-firaskarchoud-Documents-RT-Caption-Generator-for-CapCut-caption-tool"

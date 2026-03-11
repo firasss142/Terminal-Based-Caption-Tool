@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+aiofiles
+python-multipart
+ctc-forced-aligner
+torch
+torchaudio

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RT Caption Generator</title>
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gray: {
+              950: '#0a0a0f',
+            }
+          },
+          animation: {
+            'spin-slow': 'spin 1.4s linear infinite',
+            'fade-up': 'fadeUp 0.35s ease-out both',
+            'pulse-bar': 'pulseBar 1.8s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeUp: {
+              '0%': { opacity: '0', transform: 'translateY(12px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            pulseBar: {
+              '0%, 100%': { opacity: '1' },
+              '50%': { opacity: '0.6' },
+            },
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- Alpine.js (CDN) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    [x-cloak] { display: none !important; }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+    /* Drop zone hover glow */
+    .drop-zone-active {
+      border-color: #7c3aed !important;
+      background-color: rgba(124, 58, 237, 0.08) !important;
+      transform: scale(1.01);
+    }
+
+    /* Smooth progress bar */
+    .progress-bar {
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+</head>
+
+<body class="h-full bg-[#0a0a0f] text-gray-100 font-sans antialiased">
+
+<div x-data="app()" x-cloak class="min-h-screen flex flex-col items-center justify-start py-10 px-4">
+
+  <!-- ─── Header ─────────────────────────────────────────── -->
+  <header class="w-full max-w-2xl mb-8 text-center">
+    <div class="flex items-center justify-center gap-3 mb-1">
+      <!-- Icon: film-strip-like mark -->
+      <svg class="w-7 h-7 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+      </svg>
+      <h1 class="text-2xl font-semibold tracking-tight text-white">RT Caption Generator</h1>
+    </div>
+    <p class="text-sm text-gray-500">Tunisian Arabic · French · CapCut-ready SRT</p>
+  </header>
+
+  <!-- ─── Upload Screen ──────────────────────────────────── -->
+  <section x-show="screen === 'upload'" class="w-full max-w-2xl space-y-5 animate-fade-up">
+
+    <!-- Audio drop zone -->
+    <div
+      class="relative rounded-xl border-2 border-dashed border-gray-700 bg-gray-900 p-8 text-center
+             cursor-pointer transition-all duration-200"
+      :class="audioFile ? 'border-emerald-600 bg-emerald-950/20' : ''"
+      @dragover.prevent="$el.classList.add('drop-zone-active')"
+      @dragleave.prevent="$el.classList.remove('drop-zone-active')"
+      @drop.prevent="handleAudioDrop($event); $el.classList.remove('drop-zone-active')"
+      @click="$refs.audioInput.click()"
+    >
+      <input x-ref="audioInput" type="file" accept=".mp3,.wav,.m4a,.aac,.MP3,.WAV,.M4A,.AAC"
+             class="hidden" @change="handleAudioFile($event)" />
+
+      <template x-if="!audioFile">
+        <div>
+          <svg class="mx-auto w-10 h-10 text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          </svg>
+          <p class="text-gray-300 font-medium">Drop your audio file here</p>
+          <p class="text-gray-500 text-sm mt-1">MP3 · WAV · M4A · AAC — or click to browse</p>
+        </div>
+      </template>
+      <template x-if="audioFile">
+        <div class="flex items-center justify-center gap-3">
+          <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span class="text-emerald-300 font-medium truncate max-w-xs" x-text="audioFile.name"></span>
+          <button class="ml-2 text-gray-500 hover:text-red-400 transition-colors"
+                  @click.stop="audioFile = null">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </template>
+    </div>
+
+    <!-- Script drop zone -->
+    <div
+      class="relative rounded-xl border-2 border-dashed border-gray-700 bg-gray-900 p-8 text-center
+             cursor-pointer transition-all duration-200"
+      :class="scriptFile ? 'border-emerald-600 bg-emerald-950/20' : ''"
+      @dragover.prevent="$el.classList.add('drop-zone-active')"
+      @dragleave.prevent="$el.classList.remove('drop-zone-active')"
+      @drop.prevent="handleScriptDrop($event); $el.classList.remove('drop-zone-active')"
+      @click="$refs.scriptInput.click()"
+    >
+      <input x-ref="scriptInput" type="file" accept=".txt"
+             class="hidden" @change="handleScriptFile($event)" />
+
+      <template x-if="!scriptFile">
+        <div>
+          <svg class="mx-auto w-10 h-10 text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p class="text-gray-300 font-medium">Drop your script (.txt) here</p>
+          <p class="text-gray-500 text-sm mt-1">Arabic · French · UTF-8 — one sentence per line</p>
+        </div>
+      </template>
+      <template x-if="scriptFile">
+        <div class="flex items-center justify-center gap-3">
+          <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span class="text-emerald-300 font-medium truncate max-w-xs" x-text="scriptFile.name"></span>
+          <button class="ml-2 text-gray-500 hover:text-red-400 transition-colors"
+                  @click.stop="scriptFile = null">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </template>
+    </div>
+
+    <!-- Advanced options (collapsible) -->
+    <div class="rounded-xl border border-gray-800 bg-gray-900 overflow-hidden">
+      <button class="w-full flex items-center justify-between px-5 py-3 text-sm text-gray-400
+                     hover:text-gray-200 transition-colors"
+              @click="showAdvanced = !showAdvanced">
+        <span class="font-medium">Advanced options</span>
+        <svg class="w-4 h-4 transition-transform duration-200"
+             :class="showAdvanced ? 'rotate-180' : ''"
+             fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div x-show="showAdvanced" x-collapse class="border-t border-gray-800">
+        <div class="px-5 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          <!-- Alignment mode -->
+          <div>
+            <label class="block text-xs text-gray-500 mb-1.5 uppercase tracking-wider">Alignment</label>
+            <select x-model="opts.wordLevel"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm
+                           text-gray-200 focus:outline-none focus:border-violet-500">
+              <option :value="true">Word-level (default)</option>
+              <option :value="false">Sentence-level</option>
+            </select>
+          </div>
+
+          <!-- Offset -->
+          <div>
+            <label class="block text-xs text-gray-500 mb-1.5 uppercase tracking-wider">Offset (ms)</label>
+            <input type="number" x-model.number="opts.offsetMs"
+                   class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm
+                          text-gray-200 focus:outline-none focus:border-violet-500"
+                   placeholder="0" />
+          </div>
+
+          <!-- Max chars -->
+          <div>
+            <label class="block text-xs text-gray-500 mb-1.5 uppercase tracking-wider">Max chars</label>
+            <input type="number" x-model.number="opts.maxChars"
+                   class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm
+                          text-gray-200 focus:outline-none focus:border-violet-500"
+                   placeholder="42" />
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Error banner -->
+    <div x-show="uploadError"
+         class="rounded-xl border border-red-800 bg-red-950/30 px-5 py-3 text-sm text-red-400"
+         x-text="uploadError">
+    </div>
+
+    <!-- CTA button -->
+    <button
+      class="w-full py-3.5 rounded-xl font-semibold text-white transition-all duration-200
+             bg-violet-600 hover:bg-violet-500 active:scale-[0.98]
+             disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-violet-600"
+      :disabled="!audioFile || !scriptFile || submitting"
+      @click="submit()"
+    >
+      <span x-show="!submitting">Generate Captions</span>
+      <span x-show="submitting" class="flex items-center justify-center gap-2">
+        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+        Uploading…
+      </span>
+    </button>
+  </section>
+
+  <!-- ─── Progress Screen ────────────────────────────────── -->
+  <section x-show="screen === 'progress'" class="w-full max-w-2xl animate-fade-up">
+    <div class="rounded-2xl border border-gray-800 bg-gray-900 p-8 space-y-7">
+
+      <!-- Title -->
+      <div>
+        <h2 class="text-lg font-semibold text-white">Processing</h2>
+        <p class="text-sm text-gray-400 mt-0.5" x-text="audioName"></p>
+      </div>
+
+      <!-- Steps -->
+      <ol class="space-y-3">
+        <template x-for="step in steps" :key="step.stage">
+          <li class="flex items-center gap-4">
+            <!-- Icon -->
+            <div class="w-6 h-6 shrink-0 flex items-center justify-center">
+              <!-- Done -->
+              <template x-if="step.done">
+                <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </template>
+              <!-- Active -->
+              <template x-if="step.active && !step.done">
+                <svg class="w-5 h-5 text-violet-400 animate-spin-slow" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
+                  <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                </svg>
+              </template>
+              <!-- Pending -->
+              <template x-if="!step.done && !step.active">
+                <div class="w-2 h-2 rounded-full bg-gray-700 mx-auto"></div>
+              </template>
+            </div>
+            <!-- Label -->
+            <span class="text-sm"
+                  :class="step.done ? 'text-emerald-400' : step.active ? 'text-gray-100' : 'text-gray-600'"
+                  x-text="step.label">
+            </span>
+          </li>
+        </template>
+      </ol>
+
+      <!-- Progress bar -->
+      <div>
+        <div class="flex justify-between text-xs text-gray-500 mb-2">
+          <span x-text="progress.message || 'Starting…'"></span>
+          <span x-text="progress.pct + '%'"></span>
+        </div>
+        <div class="h-1.5 rounded-full bg-gray-800 overflow-hidden">
+          <div class="h-full rounded-full bg-gradient-to-r from-violet-600 to-violet-400 progress-bar"
+               :style="`width: ${progress.pct}%`">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── Results Screen ─────────────────────────────────── -->
+  <section x-show="screen === 'results'" class="w-full max-w-2xl space-y-5 animate-fade-up">
+
+    <!-- Hero card -->
+    <div class="rounded-2xl border border-gray-800 bg-gray-900 p-8">
+      <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <h2 class="text-lg font-semibold text-white">Done!</h2>
+          </div>
+          <p class="text-sm text-gray-400">
+            <span class="text-gray-200 font-medium" x-text="result.captionCount"></span> captions
+            · <span class="text-gray-200 font-medium" x-text="audioName"></span>
+          </p>
+        </div>
+        <!-- Grade badge -->
+        <div class="shrink-0">
+          <div class="text-3xl font-bold w-14 h-14 rounded-2xl flex items-center justify-center"
+               :class="{
+                 'bg-emerald-900/60 text-emerald-300': result.grade === 'A',
+                 'bg-blue-900/60 text-blue-300':    result.grade === 'B',
+                 'bg-yellow-900/60 text-yellow-300': result.grade === 'C',
+                 'bg-orange-900/60 text-orange-300': result.grade === 'D',
+                 'bg-red-900/60 text-red-300':       result.grade === 'F',
+               }"
+               x-text="result.grade || '—'">
+          </div>
+          <p class="text-[10px] text-gray-600 text-center mt-1 uppercase tracking-wider">Grade</p>
+        </div>
+      </div>
+
+      <!-- Quality metrics grid -->
+      <div x-show="result.metrics" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+        <template x-if="result.metrics">
+          <template x-for="item in qualityItems()" :key="item.label">
+            <div class="bg-gray-800/60 rounded-xl p-3">
+              <p class="text-xs text-gray-500 mb-1" x-text="item.label"></p>
+              <p class="text-sm font-semibold"
+                 :class="item.bad ? 'text-red-400' : 'text-gray-100'"
+                 x-text="item.value">
+              </p>
+            </div>
+          </template>
+        </template>
+      </div>
+
+      <!-- Warnings -->
+      <template x-if="result.warnings && result.warnings.length > 0">
+        <div class="mb-6 space-y-2">
+          <template x-for="w in result.warnings" :key="w">
+            <div class="flex items-start gap-2 text-sm text-yellow-400 bg-yellow-900/20 rounded-lg px-3 py-2">
+              <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span x-text="w"></span>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- Suggestions -->
+      <template x-if="result.suggestions && result.suggestions.length > 0">
+        <div class="mb-6">
+          <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Suggestions</p>
+          <ul class="space-y-1.5">
+            <template x-for="s in result.suggestions" :key="s">
+              <li class="flex items-start gap-2 text-sm text-gray-400">
+                <span class="text-violet-500 mt-0.5">›</span>
+                <span x-text="s"></span>
+              </li>
+            </template>
+          </ul>
+        </div>
+      </template>
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a :href="`/api/jobs/${jobId}/download`"
+           class="flex-1 text-center py-3 rounded-xl font-semibold text-white
+                  bg-violet-600 hover:bg-violet-500 transition-colors active:scale-[0.98]">
+          Download .srt
+        </a>
+        <button @click="reset()"
+                class="flex-1 py-3 rounded-xl font-semibold text-gray-300 border border-gray-700
+                       hover:border-gray-500 hover:text-white transition-colors">
+          Process Another
+        </button>
+      </div>
+    </div>
+
+    <!-- SRT Preview -->
+    <div x-show="srtPreview.length > 0"
+         class="rounded-2xl border border-gray-800 bg-gray-900 p-6">
+      <p class="text-xs text-gray-500 uppercase tracking-wider mb-4">Preview — first 5 captions</p>
+      <div class="space-y-3 font-mono text-sm">
+        <template x-for="cap in srtPreview" :key="cap.index">
+          <div class="flex items-baseline gap-3 group">
+            <span class="text-gray-600 text-xs w-5 shrink-0 text-right" x-text="cap.index"></span>
+            <div>
+              <span class="text-gray-500 text-xs" x-text="cap.time"></span>
+              <p class="text-gray-200 mt-0.5" dir="auto" x-text="cap.text"></p>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Error Screen ───────────────────────────────────── -->
+  <section x-show="screen === 'error'" class="w-full max-w-2xl animate-fade-up">
+    <div class="rounded-2xl border border-red-900 bg-red-950/20 p-8 space-y-5">
+
+      <div class="flex items-start gap-3">
+        <svg class="w-6 h-6 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+        </svg>
+        <div>
+          <h2 class="font-semibold text-red-300 mb-1">Alignment failed</h2>
+          <p class="text-sm text-red-400/80" x-text="errorMsg"></p>
+        </div>
+      </div>
+
+      <template x-if="result.suggestions && result.suggestions.length > 0">
+        <div>
+          <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Suggestions</p>
+          <ul class="space-y-1.5">
+            <template x-for="s in result.suggestions" :key="s">
+              <li class="flex items-start gap-2 text-sm text-gray-400">
+                <span class="text-violet-500 mt-0.5">›</span>
+                <span x-text="s"></span>
+              </li>
+            </template>
+          </ul>
+        </div>
+      </template>
+
+      <button @click="reset()"
+              class="w-full py-3 rounded-xl font-semibold text-white bg-gray-800
+                     hover:bg-gray-700 transition-colors border border-gray-700">
+        Try Again
+      </button>
+    </div>
+  </section>
+
+</div><!-- /app root -->
+
+<!-- ─── Alpine.js app logic ─────────────────────────────── -->
+<script>
+function app() {
+  return {
+    // UI state
+    screen: 'upload',   // upload | progress | results | error
+    showAdvanced: false,
+    submitting: false,
+    uploadError: '',
+
+    // Files
+    audioFile: null,
+    scriptFile: null,
+    audioName: '',
+
+    // Options
+    opts: {
+      wordLevel: true,
+      offsetMs: 0,
+      maxChars: 42,
+    },
+
+    // Job
+    jobId: null,
+
+    // Progress
+    progress: { stage: '', message: '', pct: 0 },
+    steps: [
+      { stage: 'validating',    label: 'Validating inputs',    done: false, active: false },
+      { stage: 'normalizing',   label: 'Normalising audio',    done: false, active: false },
+      { stage: 'loading_model', label: 'Loading MMS_FA model', done: false, active: false },
+      { stage: 'aligning',      label: 'Running alignment',    done: false, active: false },
+      { stage: 'writing',       label: 'Writing SRT',          done: false, active: false },
+      { stage: 'quality',       label: 'Quality analysis',     done: false, active: false },
+    ],
+
+    // Results
+    result: { captionCount: 0, grade: '', metrics: null, suggestions: [], warnings: [] },
+    srtPreview: [],
+    errorMsg: '',
+
+    // ── File handlers ────────────────────────────────────
+    handleAudioDrop(e) {
+      const f = e.dataTransfer.files[0];
+      if (f) this.audioFile = f;
+    },
+    handleAudioFile(e) {
+      const f = e.target.files[0];
+      if (f) this.audioFile = f;
+    },
+    handleScriptDrop(e) {
+      const f = e.dataTransfer.files[0];
+      if (f) this.scriptFile = f;
+    },
+    handleScriptFile(e) {
+      const f = e.target.files[0];
+      if (f) this.scriptFile = f;
+    },
+
+    // ── Submit ───────────────────────────────────────────
+    async submit() {
+      this.uploadError = '';
+      this.submitting = true;
+
+      const fd = new FormData();
+      fd.append('audio', this.audioFile);
+      fd.append('script', this.scriptFile);
+      fd.append('word_level', this.opts.wordLevel);
+      fd.append('offset_ms', this.opts.offsetMs);
+      fd.append('max_chars', this.opts.maxChars);
+
+      let res;
+      try {
+        res = await fetch('/api/jobs/single', { method: 'POST', body: fd });
+      } catch (err) {
+        this.uploadError = 'Network error — is the server running?';
+        this.submitting = false;
+        return;
+      }
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        this.uploadError = body.detail || `Server error ${res.status}`;
+        this.submitting = false;
+        return;
+      }
+
+      const { job_id, audio_name } = await res.json();
+      this.jobId = job_id;
+      this.audioName = audio_name;
+      this.submitting = false;
+      this.screen = 'progress';
+
+      this.listenToJob(job_id);
+    },
+
+    // ── SSE listener ─────────────────────────────────────
+    listenToJob(jobId) {
+      const es = new EventSource(`/api/jobs/${jobId}/stream`);
+
+      const stageOrder = ['validating','normalizing','loading_model','aligning','writing','quality','done'];
+
+      es.onmessage = (e) => {
+        const ev = JSON.parse(e.data);
+        this.progress = ev;
+
+        // Update step states
+        const idx = this.steps.findIndex(s => s.stage === ev.stage);
+        this.steps.forEach((s, i) => {
+          s.done   = i < idx;
+          s.active = i === idx;
+        });
+
+        if (ev.stage === 'done') {
+          es.close();
+          this.result.captionCount = ev.caption_count || 0;
+          this.result.grade        = ev.grade || '';
+          this.result.warnings     = ev.warnings || [];
+          // Mark all steps done
+          this.steps.forEach(s => { s.done = true; s.active = false; });
+          // Fetch quality + preview
+          this.fetchQuality(jobId).then(() => {
+            this.fetchPreview(jobId).then(() => {
+              this.screen = 'results';
+            });
+          });
+        }
+
+        if (ev.stage === 'error') {
+          es.close();
+          this.errorMsg = ev.message;
+          this.screen = 'error';
+        }
+      };
+
+      es.onerror = () => {
+        es.close();
+        if (this.screen === 'progress') {
+          this.errorMsg = 'Lost connection to server.';
+          this.screen = 'error';
+        }
+      };
+    },
+
+    // ── Fetch quality metrics ─────────────────────────────
+    async fetchQuality(jobId) {
+      try {
+        const res = await fetch(`/api/jobs/${jobId}/quality`);
+        if (!res.ok) return;
+        const data = await res.json();
+        this.result.metrics     = data.metrics;
+        this.result.suggestions = data.suggestions;
+        if (data.metrics?.grade) this.result.grade = data.metrics.grade;
+      } catch (_) {}
+    },
+
+    // ── Fetch SRT preview (first 5 lines) ────────────────
+    async fetchPreview(jobId) {
+      try {
+        const res = await fetch(`/api/jobs/${jobId}/download`);
+        if (!res.ok) return;
+        const text = await res.text();
+        this.srtPreview = this.parseSrtPreview(text, 5);
+      } catch (_) {}
+    },
+
+    parseSrtPreview(srt, limit) {
+      const blocks = srt.trim().split(/\r?\n\r?\n/);
+      return blocks.slice(0, limit).map(block => {
+        const lines = block.trim().split(/\r?\n/);
+        return {
+          index: lines[0] || '',
+          time:  lines[1] || '',
+          text:  lines.slice(2).join(' ') || '',
+        };
+      });
+    },
+
+    // ── Quality display helpers ───────────────────────────
+    qualityItems() {
+      const m = this.result.metrics;
+      if (!m) return [];
+      return [
+        { label: 'Total captions',  value: m.total_captions,                  bad: false },
+        { label: 'Avg duration',    value: Math.round(m.avg_duration_ms) + ' ms', bad: m.avg_duration_ms < 200 },
+        { label: 'Overlaps',        value: m.overlapping_count,               bad: m.overlapping_count > 0 },
+        { label: 'Short captions',  value: m.short_caption_count,             bad: m.short_caption_count > 0 },
+        { label: 'Long captions',   value: m.long_caption_count,              bad: m.long_caption_count > 0 },
+        { label: 'Large gaps',      value: m.gaps_too_large,                  bad: m.gaps_too_large > 0 },
+      ];
+    },
+
+    // ── Reset ─────────────────────────────────────────────
+    reset() {
+      // Cleanup server-side job
+      if (this.jobId) {
+        fetch(`/api/jobs/${this.jobId}`, { method: 'DELETE' }).catch(() => {});
+      }
+      this.screen      = 'upload';
+      this.audioFile   = null;
+      this.scriptFile  = null;
+      this.audioName   = '';
+      this.jobId       = null;
+      this.progress    = { stage: '', message: '', pct: 0 };
+      this.steps.forEach(s => { s.done = false; s.active = false; });
+      this.result      = { captionCount: 0, grade: '', metrics: null, suggestions: [], warnings: [] };
+      this.srtPreview  = [];
+      this.errorMsg    = '';
+      this.uploadError = '';
+    },
+  };
+}
+</script>
+
+</body>
+</html>
