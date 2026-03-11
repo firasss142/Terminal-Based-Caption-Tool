@@ -5,3 +5,4 @@ python-multipart
 ctc-forced-aligner
 torch
 torchaudio
+unidecode

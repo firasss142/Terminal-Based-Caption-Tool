@@ -24,7 +24,8 @@
       "Bash(ls .venv/bin/python*)",
       "Bash(python3 -m pip install fastapi \"uvicorn[standard]\" aiofiles python-multipart)",
       "Bash(chmod +x \"/Users/firaskarchoud/Documents/RT Caption Generator for CapCut/caption-tool/start_web.sh\")",
-      "Bash(python3 -c \":*)"
+      "Bash(python3 -c \":*)",
+      "Bash(/Users/firaskarchoud/.local/pipx/venvs/huggingface-hub/bin/python -c \":*)"
     ],
     "additionalDirectories": [
       "/Users/firaskarchoud/.claude/projects/-Users-firaskarchoud-Documents-RT-Caption-Generator-for-CapCut-caption-tool"
