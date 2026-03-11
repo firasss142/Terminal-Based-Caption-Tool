@@ -3,6 +3,7 @@
 import json
 import sys
 from pathlib import Path
+from typing import List
 
 # Make caption-tool root importable (for config constants used in form defaults)
 _ROOT = Path(__file__).parent.parent
@@ -69,6 +70,103 @@ async def create_single_job(
                           word_level=word_level, max_chars=max_chars)
 
     return {"job_id": job.id, "audio_name": job.audio_name}
+
+
+# ─── Job: create (batch) ──────────────────────────────────────────────────────
+
+@app.post("/api/jobs/batch")
+async def create_batch_job(
+    files: List[UploadFile] = File(...),
+    language: str = Form(default=DEFAULT_LANGUAGE),
+    offset_ms: int = Form(default=0),
+    word_level: bool = Form(default=True),
+    max_chars: int = Form(default=MAX_CHARS_PER_LINE),
+):
+    """Create a batch job for processing multiple audio/script pairs."""
+    
+    # Group files by stem (filename without extension)
+    file_groups = {}
+    
+    for file in files:
+        if not file.filename:
+            continue
+            
+        file_path = Path(file.filename)
+        stem = file_path.stem
+        ext = file_path.suffix.lower()
+        
+        if stem not in file_groups:
+            file_groups[stem] = {}
+            
+        if ext in ['.mp3', '.wav', '.m4a', '.aac']:
+            file_groups[stem]['audio'] = file
+        elif ext == '.txt':
+            file_groups[stem]['script'] = file
+    
+    # Find valid pairs (both audio and script)
+    valid_pairs = []
+    for stem, group in file_groups.items():
+        if 'audio' in group and 'script' in group:
+            valid_pairs.append((stem, group['audio'], group['script']))
+    
+    if not valid_pairs:
+        raise HTTPException(400, "No valid audio/script pairs found. Files should have matching names (e.g., video1.mp3 + video1.txt)")
+    
+    # Create batch job ID
+    import uuid
+    batch_id = str(uuid.uuid4())
+    
+    # Create individual jobs for each pair
+    batch_jobs = []
+    for stem, audio_file, script_file in valid_pairs:
+        audio_bytes = await audio_file.read()
+        script_bytes = await script_file.read()
+        
+        if not audio_bytes:
+            raise HTTPException(400, f"Audio file {audio_file.filename} is empty")
+        if not script_bytes:
+            raise HTTPException(400, f"Script file {script_file.filename} is empty")
+        
+        job = await manager.create_job(
+            audio_bytes=audio_bytes,
+            audio_filename=audio_file.filename or f"{stem}.mp3",
+            script_bytes=script_bytes,
+            script_filename=script_file.filename or f"{stem}.txt",
+        )
+        
+        batch_jobs.append({
+            "job_id": job.id,
+            "stem": stem,
+            "audio_name": job.audio_name,
+            "status": "pending"
+        })
+    
+    # Process jobs sequentially in background
+    import asyncio
+    asyncio.create_task(process_batch_jobs(batch_jobs, language, offset_ms, word_level, max_chars))
+    
+    return {
+        "batch_id": batch_id,
+        "job_count": len(batch_jobs),
+        "jobs": batch_jobs
+    }
+
+
+async def process_batch_jobs(batch_jobs, language, offset_ms, word_level, max_chars):
+    """Process batch jobs sequentially."""
+    for job_info in batch_jobs:
+        try:
+            await manager.run_job(
+                job_info["job_id"],
+                language=language,
+                offset_ms=offset_ms,
+                word_level=word_level,
+                max_chars=max_chars
+            )
+            job_info["status"] = "completed"
+        except Exception as e:
+            job_info["status"] = "failed"
+            job_info["error"] = str(e)
 
 
 # ─── Job: SSE progress stream ─────────────────────────────────────────────────

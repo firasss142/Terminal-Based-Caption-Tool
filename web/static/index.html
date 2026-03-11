@@ -215,17 +215,25 @@
           <button
             @click="activeTab = 'new-job'"
             :class="activeTab === 'new-job' ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-300'"
-            class="relative px-6 py-2 text-sm font-semibold rounded-md transition-all duration-200">
-            + New Job
+            class="relative px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200">
+            ✨ Single
             <span x-show="screen === 'progress' && activeTab !== 'new-job'"
+                  class="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-red-500 animate-pulse animate-glow"></span>
+          </button>
+          <button
+            @click="activeTab = 'batch-job'"
+            :class="activeTab === 'batch-job' ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-300'"
+            class="relative px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200">
+            📦 Batch
+            <span x-show="batchScreen === 'progress' && activeTab !== 'batch-job'"
                   class="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-red-500 animate-pulse animate-glow"></span>
           </button>
           <button
             @click="activeTab = 'history'; loadHistory()"
             :class="activeTab === 'history' ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-300'"
-            class="px-6 py-2 text-sm font-semibold rounded-md transition-all duration-200 flex items-center gap-2">
+            class="px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200 flex items-center gap-2">
             📋 History
-            <span class="ml-1 px-2.5 py-0.5 text-xs font-bold bg-slate-700 rounded-full text-cyan-300" x-text="'(' + historyJobs.length + ')'"></span>
+            <span class="ml-1 px-2 py-0.5 text-xs font-bold bg-slate-700 rounded-full text-cyan-300" x-text="'(' + historyJobs.length + ')'"></span>
           </button>
         </div>
 
@@ -279,7 +287,15 @@
           <div
             class="relative rounded-xl border-2 border-dashed border-slate-600 bg-gradient-to-br from-slate-800 to-slate-900
                    p-10 text-center cursor-pointer transition-all duration-300 hover:border-slate-500"
-            :class="audioFile ? 'border-green-500 bg-green-950/20 shadow-lg' : ''">
+            :class="[
+              audioFile ? 'border-green-500 bg-green-950/20 shadow-lg' : '',
+              dragCounter.audio > 0 ? 'drop-zone-active' : ''
+            ]"
+            @click="$refs.audioInput.click()"
+            @dragover.prevent
+            @dragenter.prevent="dragCounter.audio++"
+            @dragleave="dragCounter.audio--"
+            @drop.prevent="handleAudioDrop($event); dragCounter.audio = 0">
             <input x-ref="audioInput" type="file" accept=".mp3,.wav,.m4a,.aac,.MP3,.WAV,.M4A,.AAC"
                    class="hidden" @change="handleAudioFile($event)" />
 
@@ -320,7 +336,15 @@
           <div
             class="relative rounded-xl border-2 border-dashed border-slate-600 bg-gradient-to-br from-slate-800 to-slate-900
                    p-10 text-center cursor-pointer transition-all duration-300 hover:border-slate-500"
-            :class="scriptFile ? 'border-green-500 bg-green-950/20 shadow-lg' : ''">
+            :class="[
+              scriptFile ? 'border-green-500 bg-green-950/20 shadow-lg' : '',
+              dragCounter.script > 0 ? 'drop-zone-active' : ''
+            ]"
+            @click="$refs.scriptInput.click()"
+            @dragover.prevent
+            @dragenter.prevent="dragCounter.script++"
+            @dragleave="dragCounter.script--"
+            @drop.prevent="handleScriptDrop($event); dragCounter.script = 0">
             <input x-ref="scriptInput" type="file" accept=".txt"
                    class="hidden" @change="handleScriptFile($event)" />
 
@@ -730,6 +754,362 @@
 
     </div>
 
+    <!-- ─── BATCH JOB TAB ──────────────────────────────────────────────────── -->
+    <div x-show="activeTab === 'batch-job'" class="w-full">
+
+      <!-- ─── Batch Upload Screen ──────────────────────────────── -->
+      <section x-show="batchScreen === 'upload'" class="w-full max-w-4xl mx-auto space-y-8 animate-fade-up">
+
+        <!-- Header -->
+        <div class="text-center space-y-4 mb-8">
+          <h2 class="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            📦 Batch Processing
+          </h2>
+          <p class="text-slate-400 text-lg">Upload multiple audio/script pairs for bulk caption generation</p>
+          
+          <!-- How it works -->
+          <div class="card p-6 bg-gradient-to-br from-blue-950/20 to-purple-950/20 border border-blue-700/30">
+            <div class="flex items-start gap-4">
+              <div class="inline-block p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 shrink-0">
+                <svg class="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="text-left">
+                <h3 class="text-lg font-semibold text-blue-300 mb-3">How Batch Processing Works</h3>
+                <ul class="space-y-2 text-sm text-slate-300">
+                  <li class="flex items-start gap-3">
+                    <span class="text-blue-400 font-bold mt-0.5">1.</span>
+                    <span>Upload multiple files with <strong>matching names</strong>: <code class="bg-slate-800 px-2 py-1 rounded text-blue-300">video1.mp3</code> + <code class="bg-slate-800 px-2 py-1 rounded text-blue-300">video1.txt</code></span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="text-blue-400 font-bold mt-0.5">2.</span>
+                    <span>Files are automatically paired by filename (without extension)</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="text-blue-400 font-bold mt-0.5">3.</span>
+                    <span>Each pair is processed sequentially with the same settings</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="text-blue-400 font-bold mt-0.5">4.</span>
+                    <span>Download individual SRT files or all results as a ZIP</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Batch file upload zone -->
+        <div class="card p-8">
+          <div
+            class="relative rounded-xl border-2 border-dashed border-slate-600 bg-gradient-to-br from-slate-800 to-slate-900
+                   p-16 text-center cursor-pointer transition-all duration-300 hover:border-slate-500"
+            :class="[
+              batchFiles.length > 0 ? 'border-green-500 bg-green-950/20 shadow-lg' : '',
+              batchDragCounter > 0 ? 'drop-zone-active' : ''
+            ]"
+            @click="$refs.batchInput.click()"
+            @dragover.prevent
+            @dragenter.prevent="batchDragCounter++"
+            @dragleave="batchDragCounter--"
+            @drop.prevent="handleBatchDrop($event); batchDragCounter = 0">
+            
+            <input x-ref="batchInput" type="file" multiple
+                   accept=".mp3,.wav,.m4a,.aac,.MP3,.WAV,.M4A,.AAC,.txt"
+                   class="hidden" @change="handleBatchFiles($event)" />
+
+            <template x-if="batchFiles.length === 0">
+              <div class="space-y-6">
+                <div class="inline-block p-6 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30">
+                  <svg class="w-12 h-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-slate-200 font-bold text-2xl mb-2">Drop multiple files here</p>
+                  <p class="text-slate-400 text-lg mb-4">or click to browse</p>
+                  <div class="flex flex-wrap justify-center gap-3 text-sm">
+                    <span class="px-3 py-1 bg-blue-950/50 text-blue-300 rounded-full border border-blue-700/50">Audio: MP3, WAV, M4A, AAC</span>
+                    <span class="px-3 py-1 bg-purple-950/50 text-purple-300 rounded-full border border-purple-700/50">Scripts: TXT</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <template x-if="batchFiles.length > 0">
+              <div class="space-y-6">
+                <div class="flex items-center justify-center gap-4">
+                  <svg class="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span class="text-green-300 font-bold text-2xl" x-text="batchFiles.length + ' files uploaded'"></span>
+                </div>
+                <div class="text-slate-400 space-y-1">
+                  <p x-text="batchPairs.length + ' valid pairs found'"></p>
+                  <p class="text-sm" x-text="'Estimated processing time: ~' + Math.ceil(batchPairs.length * 2) + ' minutes'"></p>
+                </div>
+                <button class="text-slate-400 hover:text-red-400 transition-colors font-medium"
+                        @click.stop="clearBatchFiles()">🗑️ Clear all files</button>
+              </div>
+            </template>
+          </div>
+
+          <!-- File list and pairs preview -->
+          <template x-if="batchFiles.length > 0">
+            <div class="mt-8 space-y-6">
+              
+              <!-- Valid pairs -->
+              <template x-if="batchPairs.length > 0">
+                <div class="space-y-4">
+                  <h3 class="text-lg font-semibold text-green-400 flex items-center gap-2">
+                    ✅ Ready to Process (<span x-text="batchPairs.length"></span> pairs)
+                  </h3>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <template x-for="pair in batchPairs" :key="pair.stem">
+                      <div class="card p-4 bg-green-950/20 border-green-700/50">
+                        <div class="font-semibold text-green-300 mb-2" x-text="pair.stem"></div>
+                        <div class="space-y-1 text-xs text-slate-400">
+                          <div class="flex items-center gap-2">
+                            <span>🎵</span>
+                            <span x-text="pair.audio.name"></span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span>📝</span>
+                            <span x-text="pair.script.name"></span>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Unpaired files -->
+              <template x-if="batchUnpairedFiles.length > 0">
+                <div class="space-y-4">
+                  <h3 class="text-lg font-semibold text-amber-400 flex items-center gap-2">
+                    ⚠️ Unpaired Files (<span x-text="batchUnpairedFiles.length"></span>)
+                  </h3>
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <template x-for="file in batchUnpairedFiles" :key="file.name">
+                      <div class="text-xs p-2 bg-amber-950/30 border border-amber-700/50 rounded text-amber-200 truncate" 
+                           :title="file.name" x-text="file.name"></div>
+                    </template>
+                  </div>
+                  <p class="text-sm text-amber-300">These files don't have matching pairs and will be ignored.</p>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- Batch settings (same as single but shared) -->
+          <template x-if="batchFiles.length > 0">
+            <div class="mt-8 pt-8 border-t border-slate-700">
+              <div class="card overflow-hidden">
+                <div class="px-6 py-4 bg-slate-800/30">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    <span class="font-semibold text-slate-200">Batch Processing Settings</span>
+                    <span class="text-xs text-slate-500">(Applied to all pairs)</span>
+                  </div>
+                </div>
+                <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-2.5 uppercase tracking-wide">🔤 Alignment</label>
+                    <select x-model="batchOpts.wordLevel"
+                            class="w-full card px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 rounded-lg">
+                      <option :value="true">Word-level (default)</option>
+                      <option :value="false">Sentence-level</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-2.5 uppercase tracking-wide">⏱️ Offset (ms)</label>
+                    <input type="number" x-model.number="batchOpts.offsetMs"
+                           class="w-full card px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 rounded-lg"
+                           placeholder="0" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-2.5 uppercase tracking-wide">🔤 Max chars</label>
+                    <input type="number" x-model.number="batchOpts.maxChars"
+                           class="w-full card px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 rounded-lg"
+                           placeholder="42" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Error display -->
+          <div x-show="batchError" x-transition
+               class="mt-6 rounded-lg border-l-4 border-red-600 bg-gradient-to-r from-red-950 to-red-900 px-5 py-4 text-sm text-red-200 shadow-lg"
+               x-text="batchError">
+          </div>
+
+          <!-- Process button -->
+          <template x-if="batchPairs.length > 0">
+            <div class="mt-8">
+              <button
+                class="w-full py-4 rounded-lg font-bold text-white text-lg transition-all duration-300
+                       btn-primary shadow-2xl
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="batchSubmitting"
+                @click="submitBatch()">
+                <span x-show="!batchSubmitting" class="flex items-center justify-center gap-2">
+                  📦 Process <span x-text="batchPairs.length"></span> Pairs
+                </span>
+                <span x-show="batchSubmitting" class="flex items-center justify-center gap-3">
+                  <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                  </svg>
+                  <span>Starting batch processing...</span>
+                </span>
+              </button>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- ─── Batch Progress Screen ──────────────────────────── -->
+      <section x-show="batchScreen === 'progress'" class="w-full max-w-4xl mx-auto animate-fade-up">
+        <div class="card p-10 space-y-8 shadow-2xl">
+          <!-- Header -->
+          <div class="text-center space-y-2">
+            <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              📦 Batch Processing
+            </h2>
+            <p class="text-slate-400 text-base">
+              Processing <span class="text-blue-400 font-semibold" x-text="batchJobs.length"></span> file pairs
+            </p>
+          </div>
+
+          <!-- Overall progress -->
+          <div class="space-y-4">
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-slate-300 font-medium">Overall Progress</span>
+              <div class="flex items-center gap-3 text-slate-400">
+                <span x-text="batchCompletedCount + '/' + batchJobs.length + ' completed'"></span>
+                <span class="font-bold text-blue-400" x-text="Math.round((batchCompletedCount / batchJobs.length) * 100) + '%'"></span>
+              </div>
+            </div>
+            <div class="h-3 rounded-full bg-slate-700/50 border border-slate-600 overflow-hidden shadow-inner">
+              <div class="h-full progress-bar relative overflow-hidden rounded-full"
+                   :style="`width: ${Math.round((batchCompletedCount / batchJobs.length) * 100)}%`">
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Individual job status -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-slate-200">Job Status</h3>
+            <div class="space-y-3 max-h-96 overflow-y-auto">
+              <template x-for="job in batchJobs" :key="job.job_id">
+                <div class="flex items-center gap-4 p-4 rounded-lg border border-slate-700 bg-slate-800/30">
+                  <div class="w-6 h-6 shrink-0 flex items-center justify-center">
+                    <template x-if="job.status === 'completed'">
+                      <div class="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    </template>
+                    <template x-if="job.status === 'failed'">
+                      <div class="w-6 h-6 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </div>
+                    </template>
+                    <template x-if="job.status === 'processing'">
+                      <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center animate-glow">
+                        <svg class="w-4 h-4 text-white animate-spin-slow" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
+                          <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                        </svg>
+                      </div>
+                    </template>
+                    <template x-if="job.status === 'pending'">
+                      <div class="w-3 h-3 rounded-full bg-slate-600 mx-auto"></div>
+                    </template>
+                  </div>
+                  <div class="flex-1">
+                    <div class="font-medium"
+                         :class="{
+                           'text-green-400': job.status === 'completed',
+                           'text-red-400': job.status === 'failed',
+                           'text-blue-400': job.status === 'processing',
+                           'text-slate-500': job.status === 'pending'
+                         }"
+                         x-text="job.stem">
+                    </div>
+                    <template x-if="job.status === 'failed' && job.error">
+                      <div class="text-xs text-red-400 mt-1" x-text="job.error"></div>
+                    </template>
+                  </div>
+                  <template x-if="job.status === 'completed'">
+                    <div class="flex gap-2">
+                      <a :href="`/api/jobs/${job.job_id}/download`"
+                         class="text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                        ⬇️ Download
+                      </a>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Batch Results Screen ──────────────────────────── -->
+      <section x-show="batchScreen === 'results'" class="w-full max-w-4xl mx-auto space-y-6 animate-fade-up">
+        <div class="card p-8 shadow-2xl border-t-4 border-t-gradient-to-r from-green-400 to-blue-400">
+          <div class="text-center space-y-4">
+            <div class="flex items-center justify-center gap-3">
+              <div class="inline-block p-3 rounded-full bg-gradient-to-br from-green-500 to-emerald-600">
+                <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 class="text-4xl font-bold text-white">Batch Complete!</h2>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-6 py-6">
+              <div class="text-center">
+                <div class="text-3xl font-bold text-green-400" x-text="batchSuccessCount"></div>
+                <div class="text-sm text-slate-400">Successful</div>
+              </div>
+              <div class="text-center">
+                <div class="text-3xl font-bold text-red-400" x-text="batchFailedCount"></div>
+                <div class="text-sm text-slate-400">Failed</div>
+              </div>
+              <div class="text-center">
+                <div class="text-3xl font-bold text-blue-400" x-text="batchTotalCaptions"></div>
+                <div class="text-sm text-slate-400">Total Captions</div>
+              </div>
+            </div>
+
+            <div class="flex gap-3 justify-center pt-4">
+              <button @click="downloadAllSRT()"
+                      class="px-6 py-3 rounded-lg font-semibold text-white btn-primary transition-all">
+                📥 Download All SRT Files
+              </button>
+              <button @click="resetBatch()"
+                      class="px-6 py-3 rounded-lg font-semibold text-slate-200 border-2 border-slate-600
+                             hover:border-purple-500 hover:text-purple-300 hover:bg-slate-800/50 transition-all">
+                ✨ New Batch
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
     <!-- ─── HISTORY TAB ────────────────────────────────────────────────────── -->
     <div x-show="activeTab === 'history'" class="w-full max-w-6xl mx-auto animate-fade-up">
 
@@ -918,6 +1298,25 @@ function app() {
     srtPreview: [],
     srtFull: '',
     errorMsg: '',
+
+    // ─── Batch Processing ─────────────────────────
+    batchScreen: 'upload',
+    batchFiles: [],
+    batchPairs: [],
+    batchUnpairedFiles: [],
+    batchDragCounter: 0,
+    batchSubmitting: false,
+    batchError: '',
+    batchOpts: {
+      wordLevel: true,
+      offsetMs: 0,
+      maxChars: 42,
+    },
+    batchJobs: [],
+    batchCompletedCount: 0,
+    batchSuccessCount: 0,
+    batchFailedCount: 0,
+    batchTotalCaptions: 0,
 
     // ─── History ──────────────────────────────────
     activeTab: 'new-job',
@@ -1316,6 +1715,184 @@ function app() {
       document.documentElement.classList.toggle('dark', this.darkMode);
       document.body.classList.toggle('light-mode', !this.darkMode);
       localStorage.setItem('darkMode', this.darkMode);
+    },
+
+    // ─── Batch Processing Functions ──────────────
+    handleBatchFiles(event) {
+      const files = Array.from(event.target.files);
+      this.processBatchFiles(files);
+    },
+
+    handleBatchDrop(event) {
+      const files = Array.from(event.dataTransfer.files);
+      this.processBatchFiles(files);
+    },
+
+    processBatchFiles(files) {
+      this.batchFiles = files;
+      this.analyzeBatchFiles();
+    },
+
+    analyzeBatchFiles() {
+      // Group files by stem (filename without extension)
+      const groups = {};
+      
+      this.batchFiles.forEach(file => {
+        const name = file.name;
+        const lastDot = name.lastIndexOf('.');
+        const stem = lastDot > 0 ? name.substring(0, lastDot) : name;
+        const ext = lastDot > 0 ? name.substring(lastDot).toLowerCase() : '';
+        
+        if (!groups[stem]) {
+          groups[stem] = {};
+        }
+        
+        if (['.mp3', '.wav', '.m4a', '.aac'].includes(ext)) {
+          groups[stem].audio = file;
+        } else if (ext === '.txt') {
+          groups[stem].script = file;
+        }
+      });
+
+      // Find valid pairs and unpaired files
+      this.batchPairs = [];
+      this.batchUnpairedFiles = [];
+      
+      Object.entries(groups).forEach(([stem, group]) => {
+        if (group.audio && group.script) {
+          this.batchPairs.push({
+            stem: stem,
+            audio: group.audio,
+            script: group.script
+          });
+        } else {
+          if (group.audio) this.batchUnpairedFiles.push(group.audio);
+          if (group.script) this.batchUnpairedFiles.push(group.script);
+        }
+      });
+    },
+
+    clearBatchFiles() {
+      this.batchFiles = [];
+      this.batchPairs = [];
+      this.batchUnpairedFiles = [];
+      this.$refs.batchInput.value = '';
+    },
+
+    async submitBatch() {
+      this.batchError = '';
+      this.batchSubmitting = true;
+
+      const formData = new FormData();
+      
+      // Add all files
+      this.batchFiles.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      // Add settings
+      formData.append('word_level', this.batchOpts.wordLevel);
+      formData.append('offset_ms', this.batchOpts.offsetMs);
+      formData.append('max_chars', this.batchOpts.maxChars);
+
+      try {
+        const response = await fetch('/api/jobs/batch', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          this.batchError = error.detail || `Server error ${response.status}`;
+          this.batchSubmitting = false;
+          return;
+        }
+
+        const result = await response.json();
+        this.batchJobs = result.jobs;
+        this.batchSubmitting = false;
+        this.batchScreen = 'progress';
+        this.batchCompletedCount = 0;
+        
+        // Start monitoring batch progress
+        this.monitorBatchProgress();
+        
+      } catch (error) {
+        this.batchError = 'Network error — is the server running?';
+        this.batchSubmitting = false;
+      }
+    },
+
+    async monitorBatchProgress() {
+      // Poll for job completion status
+      const checkInterval = setInterval(async () => {
+        let completedCount = 0;
+        let successCount = 0;
+        let failedCount = 0;
+        let totalCaptions = 0;
+
+        // Check each job status
+        for (let job of this.batchJobs) {
+          if (job.status === 'pending') {
+            try {
+              const response = await fetch(`/api/jobs/${job.job_id}`);
+              if (response.ok) {
+                const status = await response.json();
+                if (status.status === 'done') {
+                  job.status = 'completed';
+                  totalCaptions += status.caption_count || 0;
+                } else if (status.status === 'failed') {
+                  job.status = 'failed';
+                  job.error = status.error || 'Processing failed';
+                }
+              }
+            } catch (e) {
+              // Continue checking other jobs
+            }
+          }
+          
+          if (job.status === 'completed') {
+            completedCount++;
+            successCount++;
+          } else if (job.status === 'failed') {
+            completedCount++;
+            failedCount++;
+          }
+        }
+
+        this.batchCompletedCount = completedCount;
+        this.batchSuccessCount = successCount;
+        this.batchFailedCount = failedCount;
+        this.batchTotalCaptions = totalCaptions;
+
+        // Check if all jobs are complete
+        if (completedCount >= this.batchJobs.length) {
+          clearInterval(checkInterval);
+          setTimeout(() => {
+            this.batchScreen = 'results';
+          }, 1000);
+        }
+      }, 2000); // Check every 2 seconds
+    },
+
+    async downloadAllSRT() {
+      // For now, just show toast - could implement ZIP download later
+      this.showToast('Individual downloads available in job status above', 'info', 5000);
+    },
+
+    resetBatch() {
+      this.batchScreen = 'upload';
+      this.batchFiles = [];
+      this.batchPairs = [];
+      this.batchUnpairedFiles = [];
+      this.batchJobs = [];
+      this.batchError = '';
+      this.batchSubmitting = false;
+      this.batchCompletedCount = 0;
+      this.batchSuccessCount = 0;
+      this.batchFailedCount = 0;
+      this.batchTotalCaptions = 0;
+      this.$refs.batchInput.value = '';
     },
 
     // ─── Reset ────────────────────────────────────
